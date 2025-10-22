@@ -1,0 +1,15 @@
+feeds:
+  - name: OpenAI Blog
+    url: https://openai.com/blog/rss
+  - name: Google DeepMind
+    url: https://deepmind.google/atom.xml
+  - name: Meta AI
+    url: https://ai.facebook.com/blog/rss/
+  - name: Anthropic
+    url: https://www.anthropic.com/news.xml
+  - name: Hugging Face Blog
+    url: https://huggingface.co/blog/feed.xml
+  - name: Papers with Code – Trending
+    url: https://paperswithcode.com/feeds/rss
+  - name: arXiv – cs.LG (최근)
+    url: https://export.arxiv.org/rss/cs.LG
