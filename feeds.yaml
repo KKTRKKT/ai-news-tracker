@@ -1,15 +1,72 @@
 feeds:
-  - name: OpenAI Blog
-    url: https://openai.com/blog/rss
-  - name: Google DeepMind
-    url: https://deepmind.google/atom.xml
-  - name: Meta AI
-    url: https://ai.facebook.com/blog/rss/
-  - name: Anthropic
-    url: https://www.anthropic.com/news.xml
+  # ✅ 확실하게 작동하는 공식 RSS 피드들
+  
+  - name: OpenAI News
+    url: https://openai.com/news/rss.xml
+    # 2025년 9월부터 다시 공식 RSS 제공
+  
   - name: Hugging Face Blog
     url: https://huggingface.co/blog/feed.xml
-  - name: Papers with Code – Trending
-    url: https://paperswithcode.com/feeds/rss
-  - name: arXiv – cs.LG (최근)
+    # 매우 활발 - 주 3-5회 업데이트
+  
+  - name: Google AI Blog
+    url: https://blog.research.google/feeds/posts/default
+    # Google Research 및 DeepMind 소식 포함
+  
+  # 📚 학술 논문 피드들
+  
+  - name: arXiv cs.AI
+    url: https://export.arxiv.org/rss/cs.AI
+    # 인공지능 관련 최신 논문 (매일 수십~수백개)
+  
+  - name: arXiv cs.LG  
     url: https://export.arxiv.org/rss/cs.LG
+    # 머신러닝 관련 최신 논문 (매일 수십~수백개)
+  
+  - name: arXiv cs.CL
+    url: https://export.arxiv.org/rss/cs.CL
+    # 자연어처리/계산언어학 논문
+  
+  - name: arXiv cs.CV
+    url: https://export.arxiv.org/rss/cs.CV
+    # 컴퓨터 비전 관련 논문
+  
+  # 🔬 연구 및 분석 블로그
+  
+  - name: The Gradient
+    url: https://thegradient.pub/rss/
+    # AI 연구 및 철학적 논의
+  
+  - name: Distill
+    url: https://distill.pub/rss.xml
+    # 머신러닝 시각화 및 설명 (업데이트 드물지만 고품질)
+  
+  # 📰 AI 뉴스 미디어
+  
+  - name: MIT Technology Review - AI
+    url: https://www.technologyreview.com/topic/artificial-intelligence/feed/
+    # MIT Tech Review의 AI 섹션
+  
+  - name: VentureBeat AI
+    url: https://venturebeat.com/category/ai/feed/
+    # AI 비즈니스 및 산업 뉴스
+  
+  - name: The AI Blog
+    url: https://blogs.nvidia.com/feed/
+    # NVIDIA AI 블로그
+  
+  # 🔧 개발자 커뮤니티
+  
+  - name: AI Weekly Newsletter
+    url: https://aiweekly.co/issues.rss
+    # 주간 AI 뉴스 큐레이션
+
+  # 🔧 서드파티 RSS (GitHub에서 자동 생성)
+  
+  - name: Anthropic News (Unofficial)
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml
+    # GitHub Actions로 자동 업데이트되는 비공식 RSS
+  
+  - name: Anthropic Research (Unofficial)
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_research.xml
+    # Anthropic 연구 블로그 RSS
