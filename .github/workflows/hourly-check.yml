@@ -30,6 +30,8 @@ jobs:
             git config user.name "ai-tracker-bot"
             git config user.email "actions@users.noreply.github.com"
             git add data/*.json || true
-            git commit -m "chore(state): hourly seen update"
-            git push
+            if ! git diff --cached --quiet; then
+              git commit -m "chore(state): hourly seen update"
+              git push
+            fi
           fi
