@@ -18,34 +18,40 @@ def entry_id(e):
     key = e.get("link") or (e.get("title","") + "|" + e.get("published",""))
     return hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
 
-def filter_today(entries):
-    """당일 00:00~현재(KST) 범위의 게시물만 필터링"""
+def filter_by_date_range(entries, days_back=7):
+    """최근 N일간의 게시물 필터링 (기본: 최근 7일)"""
     tz = pytz.timezone(TIMEZONE)
-    start = start_of_today_kst()
-    end = now_kst()
+    now = now_kst()
+    
+    # DAILY_SUMMARY: 최근 7일 (충분히 넓게)
+    # HOURLY_CHECK: 오늘 00:00 ~ 현재
+    if MODE == "DAILY_SUMMARY":
+        # 최근 N일 데이터 (더 넓게)
+        start = now - dt.timedelta(days=days_back)
+        end = now
+    else:
+        # 오늘 데이터
+        start = start_of_today_kst()
+        end = now
+    
+    print(f"[INFO] Date range: {start.strftime('%Y-%m-%d %H:%M')} ~ {end.strftime('%Y-%m-%d %H:%M')}")
     
     filtered = []
+    no_date_count = 0
+    
     for e in entries:
-        # published_dt가 이미 normalize_entry에서 처리됨
         pub_dt = e.get("published_dt")
         if not pub_dt:
-            # 날짜 정보가 없는 경우 최근 항목으로 간주하고 포함
-            print(f"[DEBUG] No date for: {e.get('title')[:50]}")
+            # 날짜 정보가 없는 경우 최근 항목으로 간주
+            no_date_count += 1
             filtered.append(e)
             continue
         
-        # KST로 변환 (이미 되어있을 수도 있음)
-        if pub_dt.tzinfo is None:
-            pub_dt = tz.localize(pub_dt)
-        else:
-            pub_dt = pub_dt.astimezone(tz)
-        
+        # 이미 KST로 변환되어 있음 (utils.py에서 처리)
         if start <= pub_dt <= end:
             filtered.append(e)
-            print(f"[DEBUG] Include: {pub_dt.strftime('%Y-%m-%d %H:%M')} - {e.get('title')[:50]}")
-        else:
-            print(f"[DEBUG] Exclude: {pub_dt.strftime('%Y-%m-%d %H:%M')} - {e.get('title')[:50]}")
     
+    print(f"[INFO] Filtered: {len(filtered)} items ({no_date_count} without date)")
     return filtered
 
 def fetch_all():
@@ -55,7 +61,9 @@ def fetch_all():
         print(f"[DEBUG] Fetching: {f['name']}")
         try:
             d = feedparser.parse(f["url"])
-            print(f"[DEBUG] Found {len(d.entries)} entries from {f['name']}")
+            feed_items = len(d.entries)
+            print(f"[DEBUG] Found {feed_items} entries from {f['name']}")
+            
             for raw in d.entries:
                 e = normalize_entry(raw, f["name"])
                 e["__id"] = entry_id(e)
@@ -67,60 +75,102 @@ def fetch_all():
     return items
 
 def format_summary(items):
+    if not items:
+        return "항목이 없습니다."
+    
     lines = []
-    # 상위 20개 제한 (스팸 방지)
-    for e in items[:20]:
-        line = f"• [{e.get('source')}] {e.get('title')} — {e.get('link')}"
+    # 상위 30개 제한
+    for e in items[:30]:
+        date_str = ""
+        if e.get("published_dt"):
+            date_str = e["published_dt"].strftime("%m/%d %H:%M")
+        line = f"• [{e.get('source')}] {e.get('title')}"
+        if date_str:
+            line += f" ({date_str})"
+        line += f"\n  {e.get('link')}"
         lines.append(line)
-    if len(items) > 20:
-        lines.append(f"\n... 외 {len(items) - 20}개 항목")
-    return "\n".join(lines)
+    
+    if len(items) > 30:
+        lines.append(f"\n... 외 {len(items) - 30}개 항목")
+    
+    return "\n\n".join(lines)
 
 def main():
+    print(f"[INFO] ========================================")
     print(f"[INFO] Starting in {MODE} mode")
     print(f"[INFO] Current time (KST): {now_kst().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[INFO] ========================================")
     
     all_items = fetch_all()
-    print(f"[INFO] Filtering for today's items...")
-    today_items = filter_today(all_items)
-    print(f"[INFO] Today's items: {len(today_items)}")
+    
+    if not all_items:
+        print("[WARN] No items fetched from any feed!")
+        return
+    
+    # 날짜별 필터링
+    print(f"[INFO] Filtering items...")
+    filtered_items = filter_by_date_range(all_items)
+    print(f"[INFO] Items after filtering: {len(filtered_items)}")
     
     seen = load_seen()
     print(f"[INFO] Previously seen items: {len(seen)}")
 
     if MODE == "DAILY_SUMMARY":
-        # 초기화: 오늘 분에 해당하는 항목을 seen에 기록하고 요약 발송
-        print(f"[INFO] Adding {len(today_items)} items to seen set")
-        for e in today_items:
-            seen.add(e["__id"])
-        save_seen(seen)
+        # 전날 데이터를 seen에 기록하고 요약 발송
+        print(f"[INFO] Processing {len(filtered_items)} items for daily summary")
         
-        if SLACK_WEBHOOK and today_items:
-            title = f"📌 {now_kst().strftime('%Y-%m-%d')} AI 뉴스 요약 (09:00 KST)"
-            body = format_summary(sorted(today_items, key=lambda x: x.get("published_dt") or now_kst(), reverse=True))
-            print(f"[INFO] Sending Slack notification with {len(today_items)} items")
-            send_slack(title, body)
-        elif not SLACK_WEBHOOK:
-            print("[WARN] SLACK_WEBHOOK not configured")
-        elif not today_items:
-            print("[INFO] No items to report")
+        for e in filtered_items:
+            seen.add(e["__id"])
+        
+        save_seen(seen)
+        print(f"[INFO] Saved {len(seen)} items to seen set")
+        
+        if filtered_items:
+            sorted_items = sorted(
+                filtered_items, 
+                key=lambda x: x.get("published_dt") or dt.datetime(1900, 1, 1, tzinfo=pytz.timezone(TIMEZONE)), 
+                reverse=True
+            )
+            
+            if SLACK_WEBHOOK:
+                yesterday = (now_kst() - dt.timedelta(days=1)).strftime('%Y-%m-%d')
+                title = f"📌 {yesterday} AI 뉴스 요약 ({len(filtered_items)}건)"
+                body = format_summary(sorted_items)
+                print(f"[INFO] Sending Slack notification")
+                send_slack(title, body)
+            else:
+                print("[WARN] SLACK_WEBHOOK not configured - skipping notification")
+                print("\n=== Preview ===")
+                print(format_summary(sorted_items[:5]))
+        else:
+            print("[INFO] No items to report for daily summary")
+        
         return
 
     if MODE == "HOURLY_CHECK":
-        new_items = [e for e in today_items if e["__id"] not in seen]
+        new_items = [e for e in filtered_items if e["__id"] not in seen]
         print(f"[INFO] New items found: {len(new_items)}")
         
-        if new_items and SLACK_WEBHOOK:
-            title = f"🆕 신규 감지 {now_kst().strftime('%H:%M KST')} ({len(new_items)}건)"
-            body = format_summary(sorted(new_items, key=lambda x: x.get("published_dt") or now_kst(), reverse=True))
-            send_slack(title, body)
-        
-        # 신규는 seen에 병합 저장
         if new_items:
+            sorted_items = sorted(
+                new_items,
+                key=lambda x: x.get("published_dt") or dt.datetime(1900, 1, 1, tzinfo=pytz.timezone(TIMEZONE)),
+                reverse=True
+            )
+            
+            if SLACK_WEBHOOK:
+                title = f"🆕 신규 감지 {now_kst().strftime('%H:%M KST')} ({len(new_items)}건)"
+                body = format_summary(sorted_items)
+                send_slack(title, body)
+            
+            # seen에 추가
             for e in new_items:
                 seen.add(e["__id"])
             save_seen(seen)
             print(f"[INFO] Saved {len(new_items)} new items to seen set")
+        else:
+            print("[INFO] No new items found")
+        
         return
 
 if __name__ == "__main__":
