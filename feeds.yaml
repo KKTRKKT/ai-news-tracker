@@ -12,24 +12,10 @@ feeds:
   - name: Google AI Blog
     url: https://blog.research.google/feeds/posts/default
     # Google Research 및 DeepMind 소식 포함
-  
-  # 📚 학술 논문 피드들
-  
-  - name: arXiv cs.AI
-    url: https://export.arxiv.org/rss/cs.AI
-    # 인공지능 관련 최신 논문 (매일 수십~수백개)
-  
-  - name: arXiv cs.LG  
-    url: https://export.arxiv.org/rss/cs.LG
-    # 머신러닝 관련 최신 논문 (매일 수십~수백개)
-  
-  - name: arXiv cs.CL
-    url: https://export.arxiv.org/rss/cs.CL
-    # 자연어처리/계산언어학 논문
-  
-  - name: arXiv cs.CV
-    url: https://export.arxiv.org/rss/cs.CV
-    # 컴퓨터 비전 관련 논문
+
+  # 📚 선별된 학술 논문 피드 (새로 추가)
+  - name: Hugging Face Daily Papers (Unofficial)
+    url: https://papers.takara.ai/api/feed
   
   # 🔬 연구 및 분석 블로그
   
