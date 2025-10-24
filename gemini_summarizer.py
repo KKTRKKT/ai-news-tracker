@@ -16,7 +16,43 @@ class GeminiSummarizer:
             raise ValueError("GEMINI_API_KEY가 설정되지 않았습니다")
         
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # 사용 가능한 모델 리스트 확인 및 선택
+        try:
+            # 최신 Gemini 모델명 시도 (우선순위 순)
+            model_candidates = [
+                'gemini-1.5-flash-latest',
+                'gemini-1.5-flash',
+                'gemini-pro',
+                'gemini-1.0-pro'
+            ]
+            
+            available_models = [m.name for m in genai.list_models()]
+            print(f"[DEBUG] Available models: {available_models[:5]}...")  # 처음 5개만 표시
+            
+            selected_model = None
+            for candidate in model_candidates:
+                # 'models/' 접두사 포함/미포함 모두 체크
+                if f'models/{candidate}' in available_models or candidate in available_models:
+                    selected_model = candidate
+                    break
+            
+            if not selected_model:
+                # 기본값으로 첫 번째 사용 가능한 generateContent 모델 사용
+                for model_info in genai.list_models():
+                    if 'generateContent' in model_info.supported_generation_methods:
+                        selected_model = model_info.name.replace('models/', '')
+                        break
+            
+            if not selected_model:
+                raise ValueError("사용 가능한 Gemini 모델을 찾을 수 없습니다")
+            
+            print(f"[INFO] Using Gemini model: {selected_model}")
+            self.model = genai.GenerativeModel(selected_model)
+            
+        except Exception as e:
+            print(f"[ERROR] 모델 초기화 오류: {e}")
+            raise
         
     def summarize_item(self, item: Dict) -> Dict:
         """
@@ -94,29 +130,32 @@ class GeminiSummarizer:
 
 def test_summarizer():
     """테스트 함수"""
-    summarizer = GeminiSummarizer()
-    
-    # 테스트 데이터
-    test_items = [
-        {
-            'title': 'OpenAI Announces GPT-5 with Advanced Reasoning',
-            'summary': 'OpenAI today unveiled GPT-5, featuring enhanced reasoning capabilities and multimodal understanding. The new model shows significant improvements in complex problem-solving tasks.',
-            'link': 'https://example.com/gpt5'
-        },
-        {
-            'title': 'Google DeepMind Releases New AlphaFold Version',
-            'summary': '',  # 초록 없음
-            'link': 'https://example.com/alphafold'
-        }
-    ]
-    
-    results = summarizer.batch_summarize(test_items)
-    
-    print("\n=== 결과 ===")
-    for item in results:
-        print(f"\n제목: {item['title']}")
-        print(f"요약/번역: {item['summary_ko']}")
-        print(f"초록 존재: {item['has_summary']}")
+    try:
+        summarizer = GeminiSummarizer()
+        
+        # 테스트 데이터
+        test_items = [
+            {
+                'title': 'OpenAI Announces GPT-5 with Advanced Reasoning',
+                'summary': 'OpenAI today unveiled GPT-5, featuring enhanced reasoning capabilities and multimodal understanding. The new model shows significant improvements in complex problem-solving tasks.',
+                'link': 'https://example.com/gpt5'
+            },
+            {
+                'title': 'Google DeepMind Releases New AlphaFold Version',
+                'summary': '',  # 초록 없음
+                'link': 'https://example.com/alphafold'
+            }
+        ]
+        
+        results = summarizer.batch_summarize(test_items)
+        
+        print("\n=== 결과 ===")
+        for item in results:
+            print(f"\n제목: {item['title']}")
+            print(f"요약/번역: {item['summary_ko']}")
+            print(f"초록 존재: {item['has_summary']}")
+    except Exception as e:
+        print(f"[ERROR] 테스트 실패: {e}")
 
 
 if __name__ == "__main__":
