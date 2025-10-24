@@ -4,10 +4,13 @@ import pytz, feedparser, yaml
 from utils import normalize_entry, now_kst, start_of_today_kst
 from state import load_seen, save_seen
 from notifier import send_slack
+from gemini_summarizer import GeminiSummarizer
 
 TIMEZONE = os.getenv("TIMEZONE", "Asia/Seoul")
 MODE = os.getenv("MODE", "DAILY_SUMMARY")  # DAILY_SUMMARY | HOURLY_CHECK
 SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+USE_GEMINI = os.getenv("USE_GEMINI", "true").lower() == "true"
 
 def load_feeds(path="feeds.yaml"):
     with open(path, "r", encoding="utf-8") as f:
@@ -67,6 +70,11 @@ def fetch_all():
             for raw in d.entries:
                 e = normalize_entry(raw, f["name"])
                 e["__id"] = entry_id(e)
+                
+                # RSS 초록 추출 (summary 또는 description)
+                summary = getattr(raw, "summary", "") or getattr(raw, "description", "")
+                e["summary"] = summary.strip() if summary else ""
+                
                 items.append(e)
         except Exception as ex:
             print(f"[ERROR] Failed to fetch {f['name']}: {ex}")
@@ -74,7 +82,14 @@ def fetch_all():
     print(f"[DEBUG] Total items fetched: {len(items)}")
     return items
 
-def format_summary(items):
+def format_summary(items, use_gemini_text=False):
+    """
+    뉴스 아이템 포맷팅
+    
+    Args:
+        items: 뉴스 아이템 리스트
+        use_gemini_text: Gemini 요약/번역 텍스트 사용 여부
+    """
     if not items:
         return "항목이 없습니다."
     
@@ -84,7 +99,20 @@ def format_summary(items):
         date_str = ""
         if e.get("published_dt"):
             date_str = e["published_dt"].strftime("%m/%d %H:%M")
-        line = f"• [{e.get('source')}] {e.get('title')}"
+        
+        # Gemini 요약/번역 사용
+        if use_gemini_text and e.get("summary_ko"):
+            title_text = e["summary_ko"]
+            # 초록이 있었는지 표시
+            if e.get("has_summary"):
+                prefix = "📝"  # 요약된 경우
+            else:
+                prefix = "🔤"  # 번역만 된 경우
+        else:
+            title_text = e.get("title")
+            prefix = "•"
+        
+        line = f"{prefix} [{e.get('source')}] {title_text}"
         if date_str:
             line += f" ({date_str})"
         line += f"\n  {e.get('link')}"
@@ -99,6 +127,7 @@ def main():
     print(f"[INFO] ========================================")
     print(f"[INFO] Starting in {MODE} mode")
     print(f"[INFO] Current time (KST): {now_kst().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"[INFO] Gemini API: {'Enabled' if USE_GEMINI and GEMINI_API_KEY else 'Disabled'}")
     print(f"[INFO] ========================================")
     
     all_items = fetch_all()
@@ -132,16 +161,31 @@ def main():
                 reverse=True
             )
             
+            # Gemini API로 요약/번역
+            use_gemini_text = False
+            if USE_GEMINI and GEMINI_API_KEY:
+                try:
+                    print(f"[INFO] Processing with Gemini API...")
+                    summarizer = GeminiSummarizer(GEMINI_API_KEY)
+                    sorted_items = summarizer.batch_summarize(sorted_items, delay=1.0)
+                    use_gemini_text = True
+                    print(f"[INFO] Gemini processing completed")
+                except Exception as e:
+                    print(f"[ERROR] Gemini API 오류: {e}")
+                    print(f"[INFO] Falling back to original format")
+            
             if SLACK_WEBHOOK:
                 yesterday = (now_kst() - dt.timedelta(days=1)).strftime('%Y-%m-%d')
                 title = f"📌 {yesterday} AI 뉴스 요약 ({len(filtered_items)}건)"
-                body = format_summary(sorted_items)
+                if use_gemini_text:
+                    title += " 🤖"
+                body = format_summary(sorted_items, use_gemini_text)
                 print(f"[INFO] Sending Slack notification")
                 send_slack(title, body)
             else:
                 print("[WARN] SLACK_WEBHOOK not configured - skipping notification")
                 print("\n=== Preview ===")
-                print(format_summary(sorted_items[:5]))
+                print(format_summary(sorted_items[:5], use_gemini_text))
         else:
             print("[INFO] No items to report for daily summary")
         
@@ -158,9 +202,24 @@ def main():
                 reverse=True
             )
             
+            # Gemini API로 요약/번역
+            use_gemini_text = False
+            if USE_GEMINI and GEMINI_API_KEY:
+                try:
+                    print(f"[INFO] Processing with Gemini API...")
+                    summarizer = GeminiSummarizer(GEMINI_API_KEY)
+                    sorted_items = summarizer.batch_summarize(sorted_items, delay=1.0)
+                    use_gemini_text = True
+                    print(f"[INFO] Gemini processing completed")
+                except Exception as e:
+                    print(f"[ERROR] Gemini API 오류: {e}")
+                    print(f"[INFO] Falling back to original format")
+            
             if SLACK_WEBHOOK:
                 title = f"🆕 신규 감지 {now_kst().strftime('%H:%M KST')} ({len(new_items)}건)"
-                body = format_summary(sorted_items)
+                if use_gemini_text:
+                    title += " 🤖"
+                body = format_summary(sorted_items, use_gemini_text)
                 send_slack(title, body)
             
             # seen에 추가

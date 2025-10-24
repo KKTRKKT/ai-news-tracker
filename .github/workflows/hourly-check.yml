@@ -23,6 +23,8 @@ jobs:
           MODE: HOURLY_CHECK
           TIMEZONE: Asia/Seoul
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          USE_GEMINI: "true"
         run: python main.py
       - name: Commit state if changed
         run: |
