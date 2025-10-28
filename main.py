@@ -84,7 +84,7 @@ def fetch_all():
 
 def format_summary(items, use_gemini_text=False):
     """
-    뉴스 아이템 포맷팅
+    뉴스 아이템 포맷팅 - 모든 항목 표시
     
     Args:
         items: 뉴스 아이템 리스트
@@ -94,8 +94,8 @@ def format_summary(items, use_gemini_text=False):
         return "항목이 없습니다."
     
     lines = []
-    # 상위 30개 제한
-    for e in items[:30]:
+    # 모든 항목 표시 (제한 제거)
+    for e in items:
         date_str = ""
         if e.get("published_dt"):
             date_str = e["published_dt"].strftime("%m/%d %H:%M")
@@ -117,9 +117,6 @@ def format_summary(items, use_gemini_text=False):
             line += f" ({date_str})"
         line += f"\n  {e.get('link')}"
         lines.append(line)
-    
-    if len(items) > 30:
-        lines.append(f"\n... 외 {len(items) - 30}개 항목")
     
     return "\n\n".join(lines)
 
