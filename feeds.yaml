@@ -22,7 +22,11 @@ feeds:
   - name: The Gradient
     url: https://thegradient.pub/rss/
     # AI 연구 및 철학적 논의
-  
+
+  - name: Lilian Weng's Blog
+    url: https://lilianweng.github.io/index.xml
+    # Lilian Weng's Blog (OpenAI 안전 시스템 총괄)
+
   - name: Distill
     url: https://distill.pub/rss.xml
     # 머신러닝 시각화 및 설명 (업데이트 드물지만 고품질)
