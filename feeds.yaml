@@ -1,62 +1,97 @@
 feeds:
-  # ✅ 확실하게 작동하는 공식 RSS 피드들
-  
+  # ============================================================
+  # 🏢 주요 AI 기업 공식 블로그
+  # ============================================================
+
   - name: OpenAI News
     url: https://openai.com/news/rss.xml
-    # 2025년 9월부터 다시 공식 RSS 제공
-  
+    # GPT 시리즈, ChatGPT 업데이트 등 핵심 소식
+
+  - name: Google DeepMind Blog
+    url: https://deepmind.google/blog/rss.xml
+    # Gemini, AlphaFold, 연구 논문 등 활발히 업데이트됨
+
+  - name: Google AI Blog
+    url: https://research.google/blog/rss
+    # Google Research 전반의 AI 소식 (기존 URL 수정됨)
+
+  - name: Meta AI Research
+    url: https://research.facebook.com/feed/
+    # Llama, SAM, DINO 등 오픈소스 모델 주요 소식
+
   - name: Hugging Face Blog
     url: https://huggingface.co/blog/feed.xml
-    # 매우 활발 - 주 3-5회 업데이트
-  
-  - name: Google AI Blog
-    url: https://blog.research.google/feeds/posts/default
-    # Google Research 및 DeepMind 소식 포함
+    # 오픈소스 모델 생태계의 핵심 - 주 3-5회 업데이트
 
-  # 📚 선별된 학술 논문 피드 (새로 추가)
-  - name: Hugging Face Daily Papers (Unofficial)
+  - name: Anthropic News (Unofficial)
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml
+    # Claude 관련 최신 소식
+
+  - name: Anthropic Research (Unofficial)
+    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_research.xml
+    # Anthropic 연구 블로그
+
+  # ============================================================
+  # 📰 AI 뉴스 미디어 (빠르고 신뢰할 수 있는 소스)
+  # ============================================================
+
+  - name: VentureBeat AI
+    url: https://venturebeat.com/category/ai/feed/
+    # AI 비즈니스 및 산업 트렌드 - 하루 여러 건씩 발행
+
+  - name: MIT Technology Review - AI
+    url: https://www.technologyreview.com/topic/artificial-intelligence/feed/
+    # 깊은 분석과 연구 기반 AI 저널리즘
+
+  - name: 404 Media
+    url: https://www.404media.co/rss
+    # 독립 기술 뉴스 - AI 관련 깊은 보도 및 분석
+
+  - name: The Verge - AI
+    url: https://www.theverge.com/rss/ai-artificial-intelligence/
+    # AI 제품·기술·산업 소식 큐레이테드 섹션
+
+  - name: MIT News - AI
+    url: https://news.mit.edu/rss/topic/artificial-intelligence2
+    # MIT 학술 및 연구 기반 AI 뉴스
+
+  # ============================================================
+  # 🔬 학술 논문 및 연구
+  # ============================================================
+
+  - name: arXiv - AI
+    url: https://rss.arxiv.org/rss/cs.AI
+    # 매일 새로운 AI 논문 수백건 (대량 피드 - max_items로 제한됨)
+
+  - name: Hugging Face Daily Papers
     url: https://papers.takara.ai/api/feed
-  
-  # 🔬 연구 및 분석 블로그
-  
+    # 매일 주요 논문을 큐레이테드하여 제공 (arXiv 과부하 방지)
+
+  - name: KDnuggets
+    url: https://kdnuggets.com/feed
+    # AI/ML 주요 기술과 트렌드를 큐레이테드하여 제공
+
+  # ============================================================
+  # 📚 연구 및 분석 블로그
+  # ============================================================
+
   - name: The Gradient
     url: https://thegradient.pub/rss/
-    # AI 연구 및 철학적 논의
+    # AI 연구 및 철학적 논의 - 깊은 내용의 장문 포스팅
 
   - name: Lilian Weng's Blog
     url: https://lilianweng.github.io/index.xml
-    # Lilian Weng's Blog (OpenAI 안전 시스템 총괄)
+    # OpenAI 안전 시스템 출신 연구원의 고품질 AI 블로그
 
-  - name: Distill
-    url: https://distill.pub/rss.xml
-    # 머신러닝 시각화 및 설명 (업데이트 드물지만 고품질)
-  
-  # 📰 AI 뉴스 미디어
-  
-  - name: MIT Technology Review - AI
-    url: https://www.technologyreview.com/topic/artificial-intelligence/feed/
-    # MIT Tech Review의 AI 섹션
-  
-  - name: VentureBeat AI
-    url: https://venturebeat.com/category/ai/feed/
-    # AI 비즈니스 및 산업 뉴스
-  
-  - name: The AI Blog
-    url: https://blogs.nvidia.com/feed/
-    # NVIDIA AI 블로그
-  
-  # 🔧 개발자 커뮤니티
-  
-  - name: AI Weekly Newsletter
-    url: https://aiweekly.co/issues.rss
-    # 주간 AI 뉴스 큐레이션
+  - name: AWS Machine Learning Blog
+    url: https://aws.amazon.com/blogs/machine-learning/feed/
+    # AWS의 ML 서비스와 산업 적용 사례
 
-  # 🔧 서드파티 RSS (GitHub에서 자동 생성)
-  
-  - name: Anthropic News (Unofficial)
-    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_news.xml
-    # GitHub Actions로 자동 업데이트되는 비공식 RSS
-  
-  - name: Anthropic Research (Unofficial)
-    url: https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_research.xml
-    # Anthropic 연구 블로그 RSS
+  # ============================================================
+  # 🔧 개발자 및 클라우드
+  # ============================================================
+
+  - name: NVIDIA AI Blog
+    url: https://blogs.nvidia.com/blog/ai/feed/
+    # NVIDIA의 AI 개발 및 GPU 생태계 소식
+    # 참고: /feed/ (전체 블로그)가 아닌 /blog/ai/feed/ (AI 전용)으로 변경
